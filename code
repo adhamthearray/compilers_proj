@@ -75,7 +75,7 @@ namespace JASON_Compiler
                 if (CurrentChar == ' ' || CurrentChar == '\r' || CurrentChar == '\n')
                     continue;
 
-                // Identifiers and Reserved Words
+
                 if ((CurrentChar >= 'A' && CurrentChar <= 'Z') || (CurrentChar >= 'a' && CurrentChar <= 'z'))
                 {
                     j++;
@@ -92,42 +92,51 @@ namespace JASON_Compiler
                     i = j - 1;
                 }
 
-                // Numbers (Handles both integers and decimals, ensures .24 → 0.24)
+                // khaly .x yb2a 0.x
                 else if ((CurrentChar >= '0' && CurrentChar <= '9') || CurrentChar == '.')
                 {
                     if (CurrentChar == '.')
                     {
 
-                        char dot = CurrentLexeme[0];
-                        char zero = '0';
-                        CurrentLexeme = zero.ToString();
-                        CurrentLexeme += dot;
-
-
-
-                        j++;
-                        while (j < SourceCode.Length && (SourceCode[j] >= '0' && SourceCode[j] <= '9'))
+                        if (j + 1 >= SourceCode.Length || !isNumber(SourceCode[j + 1].ToString()))
                         {
-                            CurrentLexeme += SourceCode[j];
                             j++;
+                            Errors.Error_List.Add("Unrecognized Token: " + CurrentLexeme);
                         }
-
-
-                        // Check for invalid number format (e.g., "3a3")
-                        if (j < SourceCode.Length && ((SourceCode[j] >= 'A' && SourceCode[j] <= 'Z') || (SourceCode[j] >= 'a' && SourceCode[j] <= 'z')))
+                        else
                         {
-                            while (SourceCode.Length > j && SourceCode[j] != ' ')
+
+                            char dot = CurrentLexeme[0];
+                            char zero = '0';
+                            CurrentLexeme = zero.ToString();
+                            CurrentLexeme += dot;
+
+
+
+                            j++;
+                            while (j < SourceCode.Length && (SourceCode[j] >= '0' && SourceCode[j] <= '9'))
                             {
                                 CurrentLexeme += SourceCode[j];
                                 j++;
                             }
-                            Errors.Error_List.Add("Invalid identifier format: " + CurrentLexeme);
+
+
+                            // error zay 3a3
+                            if (j < SourceCode.Length && ((SourceCode[j] >= 'A' && SourceCode[j] <= 'Z') || (SourceCode[j] >= 'a' && SourceCode[j] <= 'z')))
+                            {
+                                while (SourceCode.Length > j && SourceCode[j] != ' ')
+                                {
+                                    CurrentLexeme += SourceCode[j];
+                                    j++;
+                                }
+                                Errors.Error_List.Add("Invalid identifier format: " + CurrentLexeme);
+                            }
+                            else
+                            {
+                                FindTokenClass(CurrentLexeme);
+                            }
+                            i = j - 1;
                         }
-                        else
-                        {
-                            FindTokenClass(CurrentLexeme);
-                        }
-                        i = j - 1;
                     }
 
                     else
@@ -157,10 +166,10 @@ namespace JASON_Compiler
                         }
                         i = j - 1;
                     }
-                    
+
                     i = j - 1;
                 }
-                // String Literals
+                // el String
                 else if (CurrentChar == '"')
                 {
                     j++;
@@ -171,7 +180,7 @@ namespace JASON_Compiler
                     }
                     if (j < SourceCode.Length)
                     {
-                        CurrentLexeme += SourceCode[j]; // Closing "
+                        CurrentLexeme += SourceCode[j]; // 3lshan ye2fel
                         j++;
                     }
                     FindTokenClass(CurrentLexeme);
@@ -194,15 +203,15 @@ namespace JASON_Compiler
                     FindTokenClass(CurrentLexeme);
                     i = j - 1;
                 }
-                // Multi-character Operators
+                // law kaza haga gamb ba3s
                 else if (i + 1 < SourceCode.Length && Operators.ContainsKey(CurrentChar.ToString() + SourceCode[i + 1].ToString()))
                 {
                     CurrentLexeme = CurrentChar.ToString() + SourceCode[i + 1].ToString();
-                    i++; // Skip next character
+                    i++;
                     FindTokenClass(CurrentLexeme);
                 }
 
-                // Single-character Operators
+
                 else if (Operators.ContainsKey(CurrentChar.ToString()))
                 {
                     FindTokenClass(CurrentLexeme);
@@ -215,76 +224,80 @@ namespace JASON_Compiler
                 {
                     FindTokenClass(CurrentLexeme);
                 }
-                }
             }
+        }
 
-            void FindTokenClass(string Lex)
+        void FindTokenClass(string Lex)
+        {
+            Token_Class TC;
+            Token Tok = new Token { lex = Lex };
+            if (string.IsNullOrWhiteSpace(Lex))
+                return;
+            if (ReservedWords.TryGetValue(Tok.lex, out TC))
             {
-                Token_Class TC;
-                Token Tok = new Token { lex = Lex };
-                if (string.IsNullOrWhiteSpace(Lex))
-                    return;
-                if (ReservedWords.TryGetValue(Tok.lex, out TC))
-                {
-                    Tok.token_type = TC;
-                    Tokens.Add(Tok);
-                }
-                else if (isIdentifier(Lex))
-                {
-                    Tok.token_type = Token_Class.Identifier;
-                    Tokens.Add(Tok);
-                }
-                else if (isNumber(Lex))
-                {
-                    Tok.token_type = Token_Class.Number;
-                    Tokens.Add(Tok);
-                }
-                else if (Operators.TryGetValue(Tok.lex, out TC) || Chars.TryGetValue(Tok.lex, out TC))
-                {
-                    Tok.token_type = TC;
-                    Tokens.Add(Tok);
-                }
-                else if (isString(Lex))
-                {
-                    Tok.token_type = Token_Class.StringLiteral;
-                    Tokens.Add(Tok);
-                }
-                else if (Lex[0] == '/' && Lex[1] == '*' && Lex[Lex.Length - 1] == '/' && Lex[Lex.Length - 2] == '*')
-                {
-                    Tok.token_type = Token_Class.Comment;
-                    Tokens.Add(Tok);
-                }
-                else
-                {
-                    Errors.Error_List.Add("Unrecognized token: " + Lex);
-                }
+                Tok.token_type = TC;
+                Tokens.Add(Tok);
             }
+            else if (isIdentifier(Lex))
+            {
+                Tok.token_type = Token_Class.Identifier;
+                Tokens.Add(Tok);
+            }
+            else if (isNumber(Lex))
+            {
+                Tok.token_type = Token_Class.Number;
+                Tokens.Add(Tok);
+            }
+            else if (Operators.TryGetValue(Tok.lex, out TC) || Chars.TryGetValue(Tok.lex, out TC))
+            {
+                Tok.token_type = TC;
+                Tokens.Add(Tok);
+            }
+            else if (isString(Lex))
+            {
+                Tok.token_type = Token_Class.StringLiteral;
+                Tokens.Add(Tok);
+            }
+            else if (Lex[0] == '/' && Lex[1] == '*' && Lex[Lex.Length - 1] == '/' && Lex[Lex.Length - 2] == '*')
+            {
+                Tok.token_type = Token_Class.Comment;
+                Tokens.Add(Tok);
+            }
+            else
+            {
+                Errors.Error_List.Add("Unrecognized token: " + Lex);
+            }
+        }
 
-            bool isIdentifier(string lex)
-            {
-                bool isValid = false;
-                // Check if the lex is an identifier or not.
-                Regex id_regex = new Regex(@"^[a-zA-Z][a-zA-Z0-9]*$");
-                if (id_regex.IsMatch(lex))
-                {
-                    return true;
-                }
-                return false;
-            }
-                 bool isNumber(string lex)
-            {
-                bool isValid = false;
-                // Check if the lex is a constant (Number) or not.
-                Regex constant_regex = new Regex(@"^[0-9]+(\.[0-9]+)?$");
-                if (constant_regex.IsMatch(lex))
-                {
-                    isValid = true;
-                }
-                return isValid;
-            }
+        bool isIdentifier(string lex)
+        {
+            bool isValid = false;
 
-            bool isString(string lex) => lex[0] == '"' && lex[lex.Length - 1] == '"';
+            Regex id_regex = new Regex(@"^[a-zA-Z][a-zA-Z0-9]*$");
+            if (id_regex.IsMatch(lex))
+            {
+                return true;
+            }
+            return false;
+        }
+        bool isNumber(string lex)
+        {
+            bool isValid = false;
+
+            Regex constant_regex = new Regex(@"^[0-9]+(\.[0-9]+)?$");
+            if (constant_regex.IsMatch(lex))
+            {
+                isValid = true;
+            }
+            return isValid;
+        }
+
+        bool isString(string lex)
+        {
+            if (lex[0] == '"' && lex[lex.Length - 1] == '"')
+                return true;
+            return false;
         }
     }
-/*Sample program includes all 30 rules*/
+}
 
