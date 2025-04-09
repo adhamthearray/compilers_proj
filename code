@@ -62,7 +62,7 @@ namespace JASON_Compiler
             Chars.Add(")", Token_Class.RParanthesis);
             Chars.Add("{", Token_Class.LCurly);
             Chars.Add("}", Token_Class.RCurly);
-
+           
         }
 
         public void StartScanning(string SourceCode)
@@ -320,6 +320,7 @@ namespace JASON_Compiler
             {
                 //Tok.token_type = Token_Class.Comment;
                 //Tokens.Add(Tok);
+                return;
             }
             else
             {
@@ -342,7 +343,7 @@ namespace JASON_Compiler
         {
             bool isValid = false;
 
-            Regex constant_regex = new Regex(@"^([0-9]+)?(\.[0-9]+)?$");
+            Regex constant_regex = new Regex(@"^([0-9]+(\.[0-9]+)?|\.[0-9]+)$");
             if (constant_regex.IsMatch(lex))
             {
                 isValid = true;
@@ -352,9 +353,10 @@ namespace JASON_Compiler
 
         bool isString(string lex)
         {
-            if (lex[0] == '"' && lex[lex.Length - 1] == '"')
+            if ((lex[0] == '"' && lex[lex.Length - 1] == '"')&&lex.Length>1)
                 return true;
             return false;
         }
     }
+    
 }
