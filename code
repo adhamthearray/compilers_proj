@@ -62,6 +62,7 @@ namespace JASON_Compiler
             Chars.Add(")", Token_Class.RParanthesis);
             Chars.Add("{", Token_Class.LCurly);
             Chars.Add("}", Token_Class.RCurly);
+
         }
 
         public void StartScanning(string SourceCode)
@@ -79,11 +80,20 @@ namespace JASON_Compiler
                 if ((CurrentChar >= 'A' && CurrentChar <= 'Z') || (CurrentChar >= 'a' && CurrentChar <= 'z'))
                 {
                     j++;
-                    while (j < SourceCode.Length &&
-                          ((SourceCode[j] >= 'A' && SourceCode[j] <= 'Z') ||
-                           (SourceCode[j] >= 'a' && SourceCode[j] <= 'z') ||
-                           (SourceCode[j] >= '0' && SourceCode[j] <= '9')))
+                    while (j < SourceCode.Length)
                     {
+                        string curr = SourceCode[j].ToString();
+                        string next = (j + 1 < SourceCode.Length) ? curr + SourceCode[j + 1].ToString() : "";
+
+                        
+                        if (Operators.ContainsKey(curr) ||
+                            Operators.ContainsKey(next) ||
+                            Chars.ContainsKey(curr) ||
+                            char.IsWhiteSpace(SourceCode[j]))
+                        {
+                            break;
+                        }
+
                         CurrentLexeme += SourceCode[j];
                         j++;
                     }
@@ -106,15 +116,15 @@ namespace JASON_Compiler
                         else
                         {
 
-                            char dot = CurrentLexeme[0];
-                            char zero = '0';
-                            CurrentLexeme = zero.ToString();
-                            CurrentLexeme += dot;
+                            //char dot = CurrentLexeme[0];
+                            //char zero = '0';
+                            //CurrentLexeme = zero.ToString();
+                            //CurrentLexeme += dot;
 
 
 
                             j++;
-                            while (j < SourceCode.Length && (SourceCode[j] >= '0' && SourceCode[j] <= '9'))
+                            while (j < SourceCode.Length && ((SourceCode[j] >= '0' && SourceCode[j] <= '9'||SourceCode[j] == '.')))
                             {
                                 CurrentLexeme += SourceCode[j];
                                 j++;
@@ -203,7 +213,7 @@ namespace JASON_Compiler
                     FindTokenClass(CurrentLexeme);
                     i = j - 1;
                 }
-                // law kaza haga gamb ba3s
+                // law kaza haga gamb ba3D
                 else if (i + 1 < SourceCode.Length && Operators.ContainsKey(CurrentChar.ToString() + SourceCode[i + 1].ToString()))
                 {
                     CurrentLexeme = CurrentChar.ToString() + SourceCode[i + 1].ToString();
@@ -222,6 +232,7 @@ namespace JASON_Compiler
 
                 else
                 {
+
                     FindTokenClass(CurrentLexeme);
                 }
             }
@@ -260,8 +271,8 @@ namespace JASON_Compiler
             }
             else if (Lex[0] == '/' && Lex[1] == '*' && Lex[Lex.Length - 1] == '/' && Lex[Lex.Length - 2] == '*')
             {
-                Tok.token_type = Token_Class.Comment;
-                Tokens.Add(Tok);
+                //Tok.token_type = Token_Class.Comment;
+                //Tokens.Add(Tok);
             }
             else
             {
@@ -278,13 +289,13 @@ namespace JASON_Compiler
             {
                 return true;
             }
-            return false;
+            return isValid;
         }
         bool isNumber(string lex)
         {
             bool isValid = false;
 
-            Regex constant_regex = new Regex(@"^[0-9]+(\.[0-9]+)?$");
+            Regex constant_regex = new Regex(@"^([0-9]+)?(\.[0-9]+)?$");
             if (constant_regex.IsMatch(lex))
             {
                 isValid = true;
@@ -300,4 +311,3 @@ namespace JASON_Compiler
         }
     }
 }
-
