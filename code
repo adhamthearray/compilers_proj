@@ -112,7 +112,26 @@ namespace JASON_Compiler
                         if (j + 1 >= SourceCode.Length || !isNumber(SourceCode[j + 1].ToString()))
                         {
                             j++;
-                            Errors.Error_List.Add("Unrecognized Token: " + CurrentLexeme);
+                            while (j < SourceCode.Length)
+                            {
+                                string curr = SourceCode[j].ToString();
+                                string next = (j + 1 < SourceCode.Length) ? curr + SourceCode[j + 1].ToString() : "";
+
+
+                                if (Operators.ContainsKey(curr) ||
+                                    Operators.ContainsKey(next) ||
+                                    Chars.ContainsKey(curr) ||
+                                    char.IsWhiteSpace(SourceCode[j]))
+                                {
+                                    break;
+                                }
+
+                                CurrentLexeme += SourceCode[j];
+                                j++;
+                            }
+                            i = j - 1;
+
+                            FindTokenClass(CurrentLexeme);
                         }
                         else
                         {
@@ -226,15 +245,33 @@ namespace JASON_Compiler
                 {
                     CurrentLexeme = "/*";
                     j += 2;
-                    while (j < SourceCode.Length && !(SourceCode[j] == '*' && SourceCode[j + 1] == '/'))
+                    while (j < SourceCode.Length)  
                     {
-                        CurrentLexeme += SourceCode[j];
-                        j++;
+                     if(!(SourceCode[j] == '*' && SourceCode[j + 1] == '/'))
+                     {
+                      CurrentLexeme += SourceCode[j];
+                       j++;
+                     }
                     }
                     if (j + 1 < SourceCode.Length)
                     {
-                        CurrentLexeme += "*/";
-                        j += 2;
+                        if (SourceCode[j] == '*')
+                        {
+                            CurrentLexeme += SourceCode[j];
+                            j++;
+                        }
+                        //CurrentLexeme += "*/";
+                        //j += 2;
+                    }
+                    if (j + 1 < SourceCode.Length)
+                    {
+                        if (SourceCode[j] == '/')
+                        {
+                            CurrentLexeme += SourceCode[j];
+                            j++;
+                        }
+                        //CurrentLexeme += "*/";
+                        //j += 2;
                     }
                     FindTokenClass(CurrentLexeme);
                     i = j - 1;
